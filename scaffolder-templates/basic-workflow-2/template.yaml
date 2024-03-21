@@ -1,0 +1,94 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: basic-workflow-2-bootstrap
+  title: Basic workflow bootstrap project with Bitbucket
+  description: Bootstrap project for basic serverless workflows
+  tags:
+    - orchestrator
+    - built-in
+  links:
+    - url: https://openshift-knative.github.io/docs/docs/latest/serverless-logic/about.html
+      title: About OpenShift Serverless Logic
+      icon: techdocs
+    - url: https://kiegroup.github.io/kogito-docs/serverlessworkflow/latest/index.html
+      title: SonataFlow Guides
+      icon: techdocs
+spec:
+  owner: janus-orchestrator
+  type: basic-workflow-2-bootstrap
+
+  parameters:
+    - title: Provide information about the workflow software project
+      description: Configure the BitBucket repository where the Maven software project is located 
+      required:
+        - orgName
+      properties:
+        orgName:
+          title: Organization Name
+          type: string
+          ui:autofocus: true
+          description: Github Organization Name
+    # - title: Provide information about the Maven software project
+    #   # required:
+    #   #   - groupId
+    #   #   - artifactId
+    #   #   - version
+    #   properties:
+    #     groupId:
+    #       title: Group ID
+    #       type: string
+    #       default: io.janus.workflow
+    #       pattern: '^([a-zA-Z][a-zA-Z0-9]*)([-._][a-zA-Z0-9]+)*$'
+    #       description: Maven Group ID eg (io.janus.workflow)
+    #       ui:autofocus: true
+    #     artifactId:
+    #       title: Artifact ID
+    #       type: string
+    #       pattern: '^([a-zA-Z][a-zA-Z0-9]*)([-._][a-zA-Z0-9]+)*$'
+    #       description: Maven Artifact ID
+    #       default: onboarding
+    #     version:
+    #       title: Project version
+    #       type: string
+    #       default: 1.0.0-SNAPSHOT
+    #       description: Maven version, also used to tag the generated artifacts
+  steps:
+    - id: sourceCodeTemplate
+      name: Generating the Source Code  and Catalog Info Component
+      action: fetch:template
+      input:
+        # "Relative path is not allowed to refer to a directory outside its parent"
+        url: ./skeleton/
+        values:
+          repoUrl: http://localhost:7990/orchestrator-test/repo-test-1
+          defaultBranch: main
+          token: BBDC-MDc0MTIzODg5OTgzOhRomMSt+YzvXZk7FFnYnxzyvgsp
+          gitCommitMessage: "commit message from template.yml"
+          gitAuthorName: Gloria Ciavarrini
+          gitAuthorEmail: gciavarrini@redhat.com
+        targetPath: tmp
+    - id: renameFiles
+      action: fs:rename
+      name: Rename files
+      input:
+        files:
+          - from: tmp/README.md
+            to: tmp/README-FROM-TEMPLATE.md
+            overwrite: false
+    - id: Publish BitBucket Cloud
+      name: Publish Bitbucket Cloud
+      action: publish:bitbucketCloud
+      input:
+        repoUrl: http://localhost:7990/orchestrator-test/repo-test-1
+        description: created by Backstage
+        token: ${{secrets.BITBUCKET_TOKEN}}
+  # host: https://bitbucket.org?project=SWTEM&repo=test-repo-1
+  # output:
+  #   links:
+  #     - title: Open the Source Code Repository
+  #       url: ${{ steps.publish.output.remoteUrl }}
+  #     - title: Open the Catalog Info Component
+  #       icon: catalog
+  #       entityRef: ${{ steps.register.output.entityRef }}
+
